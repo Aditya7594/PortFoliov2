@@ -97,7 +97,7 @@ const About = () => {
                 <div className="relative w-48 h-48 mx-auto mb-6">
                   <div className={`absolute inset-0 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 transition-transform duration-500 ${profileHovered ? 'scale-110 rotate-12' : 'scale-100'}`}></div>
                   <Image 
-                    src="/profile.jpg"
+                    src="/PortFoliov2/profile.jpg"
                     alt="Aditya Nayak"
                     width={176}
                     height={176}
