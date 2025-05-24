@@ -2,7 +2,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 
 const Hero = () => {
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [typedText, setTypedText] = useState('');
   const [currentRole, setCurrentRole] = useState(0);
   // --- Card top-spin animation state ---
@@ -27,19 +26,6 @@ const Hero = () => {
     'Problem Solver',
     'Tech Innovator'
   ];
-
-  // Mouse tracking
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      setMousePosition({
-        x: (e.clientX / window.innerWidth) * 100,
-        y: (e.clientY / window.innerHeight) * 100
-      });
-    };
-
-    window.addEventListener('mousemove', handleMouseMove);
-    return () => window.removeEventListener('mousemove', handleMouseMove);
-  }, []);
 
   // Typewriter effect (improved, non-blocking, smooth)
   useEffect(() => {
@@ -220,7 +206,7 @@ const Hero = () => {
               </h1>
 
               <div className="text-2xl md:text-3xl font-semibold text-gray-300 h-12 flex items-center">
-                <span className="text-purple-400">I'm a </span>
+                <span className="text-purple-400">I&apos;m a </span>
                 <span className="ml-2 text-white border-r-2 border-purple-400 pr-1 animate-pulse">
                   {typedText}
                 </span>

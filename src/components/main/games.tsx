@@ -43,7 +43,7 @@ const Games = () => {
             Fun Games
           </h2>
           <p className="text-gray-400 max-w-2xl mx-auto">
-            Check out these interactive games I've built. Feel free to play and challenge yourself!
+            Check out these interactive games I&apos;ve built. Feel free to play and challenge yourself!
           </p>
         </motion.div>
 

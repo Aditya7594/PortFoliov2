@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
 
 const projects = [
 	{
@@ -131,10 +132,12 @@ const Projects = () => {
 								{/* Front of Card - Project Image */}
 								<div className="absolute inset-0 w-full h-full backface-hidden">
 									<div className="relative w-full h-full rounded-3xl overflow-hidden shadow-2xl border border-white/10 group">
-										<img
+										<Image
 											src={project.image}
 											alt={project.title}
 											className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+											width={500}
+											height={500}
 										/>
 										<div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
 										<div className="absolute bottom-6 left-6 right-6">

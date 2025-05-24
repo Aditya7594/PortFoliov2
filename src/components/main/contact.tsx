@@ -258,7 +258,7 @@ const Contact = () => {
           </div>
           <h2 className="text-5xl md:text-6xl font-bold mb-6">
             <span className="bg-gradient-to-r from-white via-purple-200 to-pink-200 bg-clip-text text-transparent">
-              Let's Create Something
+              Let&apos;s Create Something
             </span>
             <br />
             <span className="bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 bg-clip-text text-transparent">
@@ -266,8 +266,8 @@ const Contact = () => {
             </span>
           </h2>
           <p className="text-gray-400 text-xl max-w-3xl mx-auto leading-relaxed">
-            Ready to bring your ideas to life? I'm here to help you build innovative solutions 
-            that make a real impact. Let's start the conversation.
+            Ready to bring your ideas to life? I&apos;m here to help you build innovative solutions 
+            that make a real impact. Let&apos;s start the conversation.
           </p>
         </div>
 
@@ -417,7 +417,7 @@ const Contact = () => {
             <div className="relative group">
               <div className="absolute -inset-1 bg-gradient-to-r from-pink-600 via-purple-600 to-blue-600 rounded-2xl blur opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
               <div className="relative bg-slate-900/80 backdrop-blur-xl rounded-2xl p-8 border border-white/10 shadow-2xl">
-                <h3 className="text-2xl font-bold text-white mb-6">Let's Connect</h3>
+                <h3 className="text-2xl font-bold text-white mb-6">Let&apos;s Connect</h3>
                 <p className="text-gray-400 mb-6">Follow me on social media for updates and insights</p>
                 <div className="grid grid-cols-2 gap-4">
                   {socialLinks.map((social, index) => (

@@ -115,11 +115,11 @@ const About = () => {
 
             {/* Achievement Stats */}
             <div className="grid grid-cols-2 gap-4">
-              {achievements.map((achievement, index: number) => (
-                <div key={index} className="bg-slate-800/50 backdrop-blur-sm rounded-2xl p-6 text-center border border-white/10 hover:border-purple-500/50 transition-colors duration-300">
+              {achievements.map((achievement, i) => (
+                <div key={achievement.number} className="bg-slate-800/50 backdrop-blur-sm rounded-2xl p-6 text-center border border-white/10 hover:border-purple-500/50 transition-colors duration-300">
                   <div className="text-3xl mb-2">{achievement.icon}</div>
                   <div className="text-2xl font-bold text-white mb-1">
-                    {typeof animatedNumbers[index] !== 'undefined' ? animatedNumbers[index] : achievement.number}
+                    {typeof animatedNumbers[i] !== 'undefined' ? animatedNumbers[i] : achievement.number}
                     {achievement.number.includes('+') && '+'}
                     {achievement.number.includes('%') && '%'}
                   </div>
@@ -158,7 +158,7 @@ const About = () => {
                       <span>🎯</span> My Journey
                     </h3>
                     <p className="text-gray-300 leading-relaxed mb-6">
-                      I'm a passionate BCA student with a deep love for technology and innovation. 
+                      I&apos;m a passionate BCA student with a deep love for technology and innovation. 
                       My journey in software development started with curiosity and has evolved into 
                       a commitment to creating meaningful digital experiences.
                     </p>

@@ -29,7 +29,7 @@ export async function fetchGitHubRepoData(repoUrl: string) {
       createdAt: data.created_at,
       githubUrl: data.html_url,
     };
-  } catch (e) {
+  } catch {
     return null;
   }
 }

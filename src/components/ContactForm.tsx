@@ -29,7 +29,7 @@ export default function ContactForm() {
       
       setStatus('success');
       setFormData({ name: '', email: '', message: '' });
-    } catch (error) {
+    } catch {
       setStatus('error');
     }
   };
@@ -163,7 +163,7 @@ export default function ContactForm() {
                     exit={{ opacity: 0, y: 10 }}
                     className="absolute -bottom-6 left-0 text-xs text-blue-500"
                   >
-                    We'll never share your email
+                    We&apos;ll never share your email
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -200,7 +200,7 @@ export default function ContactForm() {
                     exit={{ opacity: 0, y: 10 }}
                     className="absolute -bottom-6 left-0 text-xs text-blue-500"
                   >
-                    Tell me what's on your mind
+                    Tell me what&apos;s on your mind
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -236,7 +236,7 @@ export default function ContactForm() {
                 exit={{ opacity: 0, y: -10 }}
                 className="text-green-600 text-sm text-center bg-green-50 dark:bg-green-900/20 p-3 rounded-md"
               >
-                Message sent successfully! I'll get back to you soon.
+                Message sent successfully! I&apos;ll get back to you soon.
               </motion.div>
             )}
             {status === 'error' && (
