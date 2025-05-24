@@ -4,7 +4,7 @@ export async function fetchGitHubRepoData(repoUrl: string) {
     // Extract owner/repo from URL
     const match = repoUrl.match(/github.com\/(.+?)\/(.+?)(?:\.git)?$/);
     if (!match) return null;
-    const [_, owner, repo] = match;
+    const [, owner, repo] = match;
     const apiUrl = `https://api.github.com/repos/${owner}/${repo}`;
     const res = await fetch(apiUrl);
     if (!res.ok) return null;

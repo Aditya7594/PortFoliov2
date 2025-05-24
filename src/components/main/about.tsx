@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
 
 const skills = [
   { name: 'Leadership & Fast Learning', level: 90, color: 'from-blue-500 to-cyan-500' },
@@ -95,9 +96,11 @@ const About = () => {
               <div className="relative bg-slate-800 rounded-3xl p-8 text-center">
                 <div className="relative w-48 h-48 mx-auto mb-6">
                   <div className={`absolute inset-0 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 transition-transform duration-500 ${profileHovered ? 'scale-110 rotate-12' : 'scale-100'}`}></div>
-                  <img 
+                  <Image 
                     src="/profile.jpg"
                     alt="Aditya Nayak"
+                    width={176}
+                    height={176}
                     className={`relative z-10 w-44 h-44 rounded-full object-cover mx-auto mt-2 transition-transform duration-500 ${profileHovered ? 'scale-105' : 'scale-100'}`}
                   />
                   <div className="absolute -top-2 -right-2 w-6 h-6 bg-green-500 rounded-full border-4 border-slate-800 animate-pulse"></div>
@@ -248,7 +251,7 @@ const About = () => {
               {activeTab === 'interests' && (
                 <div className="animate-fade-in">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {interests.map((interest, index: number) => (
+                    {interests.map((interest) => (
                       <div 
                         key={interest.name}
                         className="group bg-slate-800/50 backdrop-blur-sm rounded-2xl p-6 border border-white/10 hover:border-purple-500/50 transition-all duration-300 hover:transform hover:scale-105"

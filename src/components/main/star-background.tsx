@@ -12,7 +12,7 @@ function generateStars(count: number, radius: number) {
     let x = (Math.random() * 2 - 1);
     let y = (Math.random() * 2 - 1);
     let z = (Math.random() * 2 - 1);
-    let len = Math.sqrt(x * x + y * y + z * z);
+    const len = Math.sqrt(x * x + y * y + z * z);
     if (len > 1 || len === 0) {
       i--;
       continue;

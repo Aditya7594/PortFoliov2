@@ -1,5 +1,6 @@
 'use client';
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import Image from 'next/image';
 
 const Hero = () => {
   const [typedText, setTypedText] = useState('');
@@ -9,6 +10,14 @@ const Hero = () => {
   const [showBack, setShowBack] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   
+  const roles = useMemo(() => [
+    'Full Stack Developer',
+    'Mobile App Developer', 
+    'AI/ML Enthusiast',
+    'Problem Solver',
+    'Tech Innovator'
+  ], []);
+
   type Particle = {
     x: number;
     y: number;
@@ -18,14 +27,6 @@ const Hero = () => {
     opacity: number;
   };
   const particlesRef = useRef<Particle[]>([]);
-
-  const roles = [
-    'Full Stack Developer',
-    'Mobile App Developer', 
-    'AI/ML Enthusiast',
-    'Problem Solver',
-    'Tech Innovator'
-  ];
 
   // Typewriter effect (improved, non-blocking, smooth)
   useEffect(() => {
@@ -51,7 +52,7 @@ const Hero = () => {
     }
     type();
     return () => clearTimeout(timeoutId);
-  }, [currentRole]);
+  }, [currentRole, roles]);
 
   // Particle system
   useEffect(() => {
@@ -276,9 +277,11 @@ const Hero = () => {
                       
                       <div className="relative z-10 h-full flex flex-col items-center justify-center text-center">
                         <div className="w-32 h-32 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 mb-6 flex items-center justify-center">
-                          <img 
+                          <Image 
                             src="/profile.jpg"
                             alt="Aditya Nayak"
+                            width={112}
+                            height={112}
                             className="w-28 h-28 rounded-full object-cover"
                             style={{ boxShadow: '0 4px 24px 0 rgba(80, 70, 229, 0.25)' }}
                           />
