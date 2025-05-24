@@ -8,6 +8,9 @@ const inter = Inter({ subsets: ['latin'] });
 export const metadata: Metadata = {
   title: 'Your Portfolio',
   description: 'Welcome to my portfolio website',
+  icons: {
+    icon: '/PortFoliov2/favicon.ico',
+  },
 };
 
 export default function RootLayout({

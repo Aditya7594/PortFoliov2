@@ -18,7 +18,7 @@ const FlipCard = () => {
         <div className="absolute w-full h-full backface-hidden">
           <div className="relative w-full h-full rounded-xl overflow-hidden shadow-2xl">
             <Image
-              src="/profile.jpg"
+              src="/PortFoliov2/profile.jpg"
               alt={profileData.name}
               fill
               sizes="(max-width: 768px) 100vw, 300px"

@@ -278,7 +278,7 @@ const Hero = () => {
                       <div className="relative z-10 h-full flex flex-col items-center justify-center text-center">
                         <div className="w-32 h-32 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 mb-6 flex items-center justify-center">
                           <Image 
-                            src="/profile.jpg"
+                            src="/PortFoliov2/profile.jpg"
                             alt="Aditya Nayak"
                             width={112}
                             height={112}

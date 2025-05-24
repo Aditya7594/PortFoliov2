@@ -6,7 +6,7 @@ const projects = [
 		title: 'Computer Lab Management System',
 		description:
 			'A comprehensive system for managing computer lab resources, bookings, and maintenance built with Visual Basic .NET. Features include user authentication, resource scheduling, maintenance tracking, and detailed reporting capabilities.',
-		image: '/projects/computerlab.jpg',
+		image: '/PortFoliov2/projects/computerlab.jpg',
 		tags: ['Visual Basic .NET', 'SQL Server', 'Windows Forms'],
 		languages: ['Visual Basic .NET', 'SQL', 'C#'],
 		link: 'https://github.com/Aditya7594/computerlab-COMPLETED.git',
@@ -23,7 +23,7 @@ const projects = [
 		title: 'Anime Soundboard',
 		description:
 			'An Android app featuring sound clips from popular anime series like One Piece and Bleach. Interactive interface with custom sound effects, favorites system, and sharing capabilities.',
-		image: '/projects/Animesoundboard.png',
+		image: '/PortFoliov2/projects/Animesoundboard.png',
 		tags: ['Java', 'Android', 'Media Player'],
 		languages: ['Java', 'XML', 'Kotlin'],
 		link: 'https://github.com/Aditya7594/Anime-Soundboard.git',
@@ -40,7 +40,7 @@ const projects = [
 		title: 'AI Music Player',
 		description:
 			'An intelligent music player that uses AI to enhance the listening experience with smart recommendations, mood detection, and personalized playlists based on listening habits.',
-		image: '/projects/aimusic.jpg',
+		image: '/PortFoliov2/projects/aimusic.jpg',
 		tags: ['Kotlin', 'Android', 'AI Integration'],
 		languages: ['Kotlin', 'Python', 'TensorFlow'],
 		link: 'https://github.com/Aditya7594/Ai-Music-Player.git',
