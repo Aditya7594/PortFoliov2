@@ -1,0 +1,23 @@
+{
+  "name": "Aditya Nayak",
+  "title": "Full Stack Developer",
+  "dob": "January 1, 1995",
+  "location": "Your City, Country",
+  "email": "your.email@example.com",
+  "phone": "+1 234 567 890",
+  "bio": "I build modern web applications with cutting-edge technologies. Passionate about creating seamless user experiences and robust backend solutions.",
+  "social": {
+    "github": "https://github.com/yourusername",
+    "linkedin": "https://linkedin.com/in/yourusername",
+    "twitter": "https://twitter.com/yourusername"
+  },
+  "skills": [
+    "React",
+    "Next.js",
+    "Node.js",
+    "TypeScript",
+    "Python",
+    "MongoDB",
+    "AWS"
+  ]
+} 
