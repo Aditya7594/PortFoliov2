@@ -6,9 +6,9 @@ A personal portfolio website showcasing my technical skills and projects, featur
 
 Here are some screenshots of the portfolio:
 
-![Hero Section](/images/hero-section.png)
-![Skills Section](/images/skills-section.png)
-![Interactive Android Phone](/images/phone-section.png)
+![Hero Section](assets/images/hero-section.png)
+![Skills Section](assets/images/skills-section.png)
+![Interactive Android Phone](assets/images/phone-section.png)
 
 ## Features
 
