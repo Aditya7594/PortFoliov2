@@ -1,7 +1,6 @@
-import type { NextConfig } from 'next'
-
+/** @type {import('next').NextConfig} */
 const repo = 'PortFoliov2'; // GitHub repo name
-const config: NextConfig = {
+const config = {
   output: 'export',
   basePath: `/${repo}`,
   assetPrefix: `/${repo}/`,
@@ -10,4 +9,4 @@ const config: NextConfig = {
   },
 }
 
-export default config
+module.exports = config; 
