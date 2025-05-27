@@ -1,30 +1,39 @@
 # My Portfolio
 
-A personal portfolio website showcasing my technical skills and projects.
+A personal portfolio website showcasing my technical skills and projects, featuring an interactive Android phone simulation.
 
 ## Screenshots
 
-Here are a couple of screenshots of the portfolio:
+Here are some screenshots of the portfolio:
 
 ![Hero Section](assets/images/hero-section.png)
 ![Skills Section](assets/images/skills-section.png)
+![Interactive Android Phone](assets/images/phone-section.png)
 
 ## Features
 
-*   Showcase of technical skills with proficiency levels and animated cards.
-*   Interactive contact form (using Formspree for submissions).
-*   Dynamic background effects.
-*   Responsive design for various devices.
-*   Highlighting of projects with details.
+* Interactive Android phone simulation with:
+  * Working lock screen with PIN authentication
+  * Multiple functional apps (Clock, Calculator, TicTacToe, etc.)
+  * Real-time camera integration
+  * 360° view mode
+  * Volume controls with OSD
+* Showcase of technical skills with proficiency levels and animated cards
+* Interactive contact form (using Formspree for submissions)
+* Dynamic background effects
+* Responsive design for various devices
+* Highlighting of projects with details
 
 ## Technologies Used
 
-*   Next.js
-*   React
-*   TypeScript
-*   Tailwind CSS
-*   Framer Motion
-*   Formspree (for contact form submissions)
+* Next.js
+* React
+* TypeScript
+* Tailwind CSS
+* Framer Motion
+* Three.js (for 3D effects)
+* WebRTC (for camera integration)
+* Formspree (for contact form submissions)
 
 ---
 
