@@ -52,6 +52,15 @@ const AndroidProMaxPhone = () => {
   const PIN_CODE = "1234";
   const [history, setHistory] = useState<string[]>([]);
 
+  // 360 View State
+  const [is360View, setIs360View] = useState<boolean>(false);
+  const [rotationY, setRotationY] = useState<number>(0);
+  const [isDragging360, setIsDragging360] = useState<boolean>(false);
+  const dragStartXRef = useRef<number>(0);
+  const initialRotationYRef = useRef<number>(0);
+  const phoneFrameRef = useRef<HTMLDivElement>(null);
+
+
   const stopCamera = useCallback(() => {
     if (cameraStream) {
       cameraStream.getTracks().forEach(track => track.stop());
@@ -73,7 +82,7 @@ const AndroidProMaxPhone = () => {
       setShowApps(true);
       alert("Could not access camera. Please ensure permissions are granted.");
     }
-  }, [cameraStream]); // Keep cameraStream dependency as it correctly prevents restart if stream exists
+  }, [cameraStream]);
 
 
   useEffect(() => {
@@ -83,12 +92,16 @@ const AndroidProMaxPhone = () => {
   }, [cameraStream]);
 
   useEffect(() => {
+    if (is360View) { // Stop camera if entering 360 view
+      if (cameraStream) stopCamera();
+      return;
+    }
     if (currentApp === 'Camera') {
       if (!cameraStream) startCamera();
     } else {
       if (cameraStream) stopCamera();
     }
-  }, [currentApp, startCamera, stopCamera, cameraStream]); // cameraStream in deps here means this effect re-evaluates when stream status changes, which is intended.
+  }, [currentApp, startCamera, stopCamera, cameraStream, is360View]);
 
   useEffect(() => {
     return () => {
@@ -106,6 +119,7 @@ const AndroidProMaxPhone = () => {
   }, []);
 
   const goBack = useCallback(() => {
+    if (is360View) return;
     if (history.length > 0) {
       const newHistory = [...history];
       const destination = newHistory.pop();
@@ -116,18 +130,18 @@ const AndroidProMaxPhone = () => {
         setShowApps(true);
       } else if (destination) {
         setCurrentApp(destination);
-      } else { // Should not happen if history handled well, but as a fallback:
+      } else {
         goHome();
       }
     } else {
-      // If history is empty and we are already on home screen, do nothing.
       if (currentApp !== null) {
         goHome();
       }
     }
-  }, [history, currentApp, goHome]);
+  }, [history, currentApp, goHome, is360View]);
 
   const openApp = (appName: string) => {
+    if (is360View) return;
     if (currentApp) {
       setHistory(prev => [...prev, currentApp]);
     } else if (showApps) {
@@ -138,6 +152,7 @@ const AndroidProMaxPhone = () => {
   };
 
   const openAppOrLink = (app: { name: string; link: string | null }) => {
+    if (is360View) return;
     if (app.link) {
       window.open(app.link, '_blank');
     } else {
@@ -173,16 +188,18 @@ const AndroidProMaxPhone = () => {
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
-    if (stopwatchRunning) {
+    if (stopwatchRunning && !is360View) {
       interval = setInterval(() => setStopwatchValue(s => s + 0.01), 10);
     }
     return () => clearInterval(interval);
-  }, [stopwatchRunning]);
+  }, [stopwatchRunning, is360View]);
 
-  const handleStopwatchToggle = () => setStopwatchRunning(prev => !prev);
+  const handleStopwatchToggle = () => { if (!is360View) setStopwatchRunning(prev => !prev); }
   const handleStopwatchReset = () => {
-    setStopwatchRunning(false);
-    setStopwatchValue(0);
+    if (!is360View) {
+      setStopwatchRunning(false);
+      setStopwatchValue(0);
+    }
   };
 
   const formatStopwatchTime = (timeInSeconds: number) => {
@@ -196,7 +213,7 @@ const AndroidProMaxPhone = () => {
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
-    if (timerRunning && timer > 0) {
+    if (timerRunning && timer > 0 && !is360View) {
       interval = setInterval(() => {
         setTimer(t => {
           if (t <= 1) {
@@ -211,9 +228,10 @@ const AndroidProMaxPhone = () => {
         setTimerRunning(false);
     }
     return () => clearInterval(interval);
-  }, [timerRunning, timer]);
+  }, [timerRunning, timer, is360View]);
 
   const handleTimerSet = () => {
+    if (is360View) return;
     const parts = timerInputValue.split(':').map(Number);
     let totalSeconds = 0;
     if (parts.length === 3) totalSeconds = parts[0] * 3600 + parts[1] * 60 + parts[2];
@@ -228,22 +246,24 @@ const AndroidProMaxPhone = () => {
     }
   };
   const handleTimerToggle = () => {
+    if (is360View) return;
     if (timer > 0) setTimerRunning(prev => !prev);
     else alert("Set timer duration first.");
   };
   const handleTimerReset = () => {
+    if (is360View) return;
     setTimerRunning(false);
     setTimer(0);
     setTimerInputValue('');
   };
 
   useEffect(() => {
-    if (clockTab !== 'clock' || currentApp !== 'Clock' || !isPoweredOn || isLocked) {
+    if (is360View || clockTab !== 'clock' || currentApp !== 'Clock' || !isPoweredOn || isLocked) {
         return;
     }
     const interval = setInterval(() => setCurrentAnalogTime(new Date()), 1000);
     return () => clearInterval(interval);
-  }, [clockTab, currentApp, isPoweredOn, isLocked]);
+  }, [clockTab, currentApp, isPoweredOn, isLocked, is360View]);
 
 
   useEffect(() => {
@@ -260,12 +280,15 @@ const AndroidProMaxPhone = () => {
         day: 'numeric'
       }));
     };
-    updateDateTime();
-    const interval = setInterval(updateDateTime, 1000);
-    return () => clearInterval(interval);
-  }, []);
+    if (!is360View) { // Only update time if not in 360 view, or it can run in bg.
+        updateDateTime();
+        const interval = setInterval(updateDateTime, 1000);
+        return () => clearInterval(interval);
+    }
+  }, [is360View]);
 
   const handlePowerPress = () => {
+    if (is360View) return;
     if (!isPoweredOn) {
       setIsPoweredOn(true);
       setIsLocked(true);
@@ -283,7 +306,6 @@ const AndroidProMaxPhone = () => {
     }
   };
   
-  // Effect to clear volume OSD timeout on unmount
   useEffect(() => {
     return () => {
       if (volumeOsdTimeoutRef.current) {
@@ -304,13 +326,13 @@ const AndroidProMaxPhone = () => {
   };
 
   const handleVolumeUp = () => {
-    if (!isPoweredOn) return;
+    if (!isPoweredOn || is360View) return;
     setVolume(prev => Math.min(100, prev + 10));
     showVolumeWithTimeout();
   };
 
   const handleVolumeDown = () => {
-    if (!isPoweredOn) return;
+    if (!isPoweredOn || is360View) return;
     setVolume(prev => Math.max(0, prev - 10));
     showVolumeWithTimeout();
   };
@@ -337,7 +359,7 @@ const AndroidProMaxPhone = () => {
   }, [board]);
 
   const handleTicTacToeClick = (index: number) => {
-    if (board[index] || winner) return;
+    if (is360View || board[index] || winner) return;
     const newBoard = [...board];
     newBoard[index] = isXNext ? 'X' : 'O';
     setBoard(newBoard);
@@ -345,12 +367,14 @@ const AndroidProMaxPhone = () => {
   };
 
   const resetGame = () => {
+    if (is360View) return;
     setBoard(Array(9).fill(null));
     setIsXNext(true);
     setWinner(null);
   };
 
   const inputNumber = (num: string) => {
+    if (is360View) return;
     if (waitingForOperand) {
       setDisplay(num);
       setWaitingForOperand(false);
@@ -360,6 +384,7 @@ const AndroidProMaxPhone = () => {
   };
 
   const inputDecimal = () => {
+    if (is360View) return;
     if (waitingForOperand) {
       setDisplay('0.');
       setWaitingForOperand(false);
@@ -369,6 +394,7 @@ const AndroidProMaxPhone = () => {
   };
 
   const inputOperation = (nextOperation: string) => {
+    if (is360View) return;
     const inputValue = parseFloat(display);
 
     if (previousValue === '') {
@@ -392,22 +418,23 @@ const AndroidProMaxPhone = () => {
       case '÷': result = secondValue === 0 ? Infinity : firstValue / secondValue; break;
       default: result = secondValue;
     }
-    // Handle precision for floating point issues
     return parseFloat(Number(result).toPrecision(12));
   };
 
   const performCalculation = () => {
+    if (is360View) return;
     const inputValue = parseFloat(display);
     if (previousValue !== '' && operation) {
       const newValue = calculate(parseFloat(previousValue), inputValue, operation);
       setDisplay(String(newValue));
       setPreviousValue('');
       setOperation('');
-      setWaitingForOperand(false); // Important: reset waitingForOperand after calculation
+      setWaitingForOperand(false);
     }
   };
 
   const clearCalculator = () => {
+    if (is360View) return;
     setDisplay('0');
     setPreviousValue('');
     setOperation('');
@@ -415,6 +442,7 @@ const AndroidProMaxPhone = () => {
   };
 
   const toggleSign = () => {
+    if (is360View) return;
     setDisplay(prev => String(parseFloat(prev) * -1));
   };
 
@@ -426,7 +454,7 @@ const AndroidProMaxPhone = () => {
   };
 
   const handlePinInput = (digit: string) => {
-    if (isAttemptingUnlock || pinInput.length >= 4) return;
+    if (is360View || isAttemptingUnlock || pinInput.length >= 4) return;
 
     const newPin = pinInput + digit;
     setPinInput(newPin);
@@ -434,18 +462,18 @@ const AndroidProMaxPhone = () => {
 
     if (newPin.length === 4) {
       setIsAttemptingUnlock(true);
-      // Short delay to allow UI update for the 4th dot
-      setTimeout(() => attemptUnlock(newPin), 100); 
+      setTimeout(() => attemptUnlock(newPin), 100);
     }
   };
 
   const handleDeletePin = () => {
-    if (isAttemptingUnlock) return;
+    if (is360View || isAttemptingUnlock) return;
     setPinInput(prev => prev.slice(0, -1));
     setUnlockMessage('');
   };
 
   const attemptUnlock = (pin: string) => {
+    if (is360View) return;
     if (pin === PIN_CODE) {
       setUnlockMessage('Unlocked!');
       setTimeout(() => {
@@ -457,13 +485,48 @@ const AndroidProMaxPhone = () => {
       }, 500);
     } else {
       setUnlockMessage('Incorrect PIN');
-      setPinInput(''); // Clear PIN immediately for incorrect attempt
+      setPinInput('');
       setTimeout(() => {
-        // setUnlockMessage(''); // Optionally clear message after a while
         setIsAttemptingUnlock(false);
-      }, 1000); // Keep message for 1s
+      }, 1000);
     }
   };
+
+  // 360 View Handlers
+  const handleToggle360View = () => {
+    setIs360View(prev => !prev);
+  };
+
+  const handle360MouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!is360View) return;
+    e.preventDefault();
+    setIsDragging360(true);
+    dragStartXRef.current = e.clientX;
+    initialRotationYRef.current = rotationY;
+  };
+
+  const handle360MouseMoveGlobal = useCallback((e: MouseEvent) => {
+    if (!is360View || !isDragging360) return;
+    e.preventDefault();
+    const dx = e.clientX - dragStartXRef.current;
+    setRotationY(initialRotationYRef.current - dx * 0.3); // Adjust sensitivity
+  }, [is360View, isDragging360]);
+
+  const handle360MouseUpGlobal = useCallback(() => {
+    if (!is360View || !isDragging360) return; // Ensure we only act if we were dragging in 360 view
+    setIsDragging360(false);
+  }, [is360View, isDragging360]); // Added isDragging360 here for safety.
+
+  useEffect(() => {
+    if (is360View && isDragging360) {
+      document.addEventListener('mousemove', handle360MouseMoveGlobal);
+      document.addEventListener('mouseup', handle360MouseUpGlobal);
+      return () => {
+        document.removeEventListener('mousemove', handle360MouseMoveGlobal);
+        document.removeEventListener('mouseup', handle360MouseUpGlobal);
+      };
+    }
+  }, [is360View, isDragging360, handle360MouseMoveGlobal, handle360MouseUpGlobal]);
 
 
   const apps = [
@@ -478,7 +541,6 @@ const AndroidProMaxPhone = () => {
     { name: 'Gallery', icon: 'gallery', link: null, description: 'Photo gallery' }
   ];
 
-  // SVG icon renderer (unchanged)
   const AppIcon = ({ icon, className = "w-10 h-10" }: { icon: string, className?: string }) => {
     switch (icon) {
       case 'github': return <svg className={`${className} text-white`} viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>;
@@ -536,40 +598,13 @@ const AndroidProMaxPhone = () => {
 
   const NavigationBar = memo(() => (
     (isPoweredOn && !isLocked && (currentApp || showApps)) && (
-      <div className="absolute bottom-0 left-0 right-0 bg-black/40 backdrop-blur-xl px-6 py-3 z-50">
-        <div className="max-w-sm mx-auto flex items-center justify-between">
-          <button 
-            onClick={goBack} 
-            className="w-12 h-12 flex items-center justify-center rounded-full transition-all duration-200 hover:bg-white/10"
-          >
-            <svg className="w-6 h-6 text-white/90" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M15 18l-6-6 6-6"/>
-            </svg>
-          </button>
-
-          <button 
-            onClick={goHome}
-            className="w-14 h-14 -mt-5 rounded-full border-2 border-white/20 bg-white/10 backdrop-blur-lg flex items-center justify-center transition-all duration-200 hover:bg-white/20"
-          >
-            <svg className="w-7 h-7 text-white/90" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
-            </svg>
-          </button>
-
-          <button 
-            onClick={() => setShowApps(true)}
-            className="w-12 h-12 flex items-center justify-center rounded-full transition-all duration-200 hover:bg-white/10"
-          >
-            <svg className="w-6 h-6 text-white/90" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M4 6h16M4 12h16m-7 6h7"/>
-            </svg>
-          </button>
-        </div>
-
-        {/* Optional Gesture Bar */}
-        <div className="mt-2 flex justify-center">
-          <div className="w-32 h-1 bg-white/30 rounded-full"></div>
-        </div>
+      <div className="absolute bottom-0 left-0 right-0 h-16 bg-black bg-opacity-50 backdrop-blur-lg flex justify-around items-center px-6 z-50">
+        <button onClick={goBack} className="p-3 rounded-full bg-white bg-opacity-20 hover:bg-opacity-30 transition-all">
+          <svg className="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        </button>
+        <button onClick={goHome} className="p-3 rounded-full bg-white bg-opacity-20 hover:bg-opacity-30 transition-all">
+          <svg className="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>
+        </button>
       </div>
     )
   ));
@@ -621,7 +656,6 @@ const AndroidProMaxPhone = () => {
   LockScreen.displayName = 'LockScreen';
 
 
-  // App Specific Components (memoized for performance)
   const CameraApp = memo(() => (
     <div className="w-full h-full bg-black flex items-center justify-center">
       <video ref={videoRef} autoPlay playsInline className="w-full h-full object-cover"></video>
@@ -635,7 +669,7 @@ const AndroidProMaxPhone = () => {
       <div className="p-4 flex flex-col h-full text-white">
         <div className="flex justify-around mb-4 border-b border-gray-700">
           {['clock', 'stopwatch', 'timer'].map(tab => (
-            <button key={tab} onClick={() => setClockTab(tab as any)} className={`py-2 px-4 capitalize ${clockTab === tab ? 'text-blue-400 border-b-2 border-blue-400' : 'text-gray-400'}`}>
+            <button key={tab} onClick={() => {if (!is360View) setClockTab(tab as any)}} className={`py-2 px-4 capitalize ${clockTab === tab ? 'text-blue-400 border-b-2 border-blue-400' : 'text-gray-400'}`}>
               {tab}
             </button>
           ))}
@@ -664,7 +698,7 @@ const AndroidProMaxPhone = () => {
                 <input
                   type="text"
                   value={timerInputValue}
-                  onChange={(e) => setTimerInputValue(e.target.value)}
+                  onChange={(e) => { if(!is360View) setTimerInputValue(e.target.value) }}
                   placeholder="HH:MM:SS or MM:SS or SS"
                   className="bg-gray-700 text-white p-3 rounded-lg mb-4 w-full text-center text-lg"
                 />
@@ -693,7 +727,7 @@ const AndroidProMaxPhone = () => {
             key={i}
             onClick={() => handleTicTacToeClick(i)}
             className="w-20 h-20 bg-gray-700 text-4xl font-bold rounded-lg flex items-center justify-center hover:bg-gray-600 disabled:opacity-80"
-            disabled={!!value || !!winner}
+            disabled={!!value || !!winner || is360View}
           >
             {value === 'X' ? <span className="text-blue-400">{value}</span> : <span className="text-yellow-400">{value}</span>}
           </button>
@@ -702,9 +736,10 @@ const AndroidProMaxPhone = () => {
       <div className="text-xl mb-6 h-8">
         {winner ? (winner === 'Draw' ? "It's a Draw!" : `Winner: ${winner}`) : `Next player: ${isXNext ? 'X' : 'O'}`}
       </div>
-      <button onClick={resetGame} className="px-6 py-3 bg-blue-600 rounded-full text-lg hover:bg-blue-700"/>
+      <button onClick={resetGame} className="px-6 py-3 bg-blue-600 rounded-full text-lg hover:bg-blue-700">
         Reset Game
-      </div>
+      </button>
+    </div>
   ));
   TicTacToeApp.displayName = 'TicTacToeApp';
 
@@ -725,6 +760,7 @@ const AndroidProMaxPhone = () => {
     ];
 
     const handleClick = (btn: any) => {
+      if (is360View) return;
       switch (btn.type) {
         case 'number': inputNumber(btn.value); break;
         case 'operator': inputOperation(btn.value); break;
@@ -745,7 +781,8 @@ const AndroidProMaxPhone = () => {
             <button
               key={btn.label}
               onClick={() => handleClick(btn)}
-              className={`p-5 text-2xl ${btn.className || 'bg-gray-600 hover:bg-gray-700'} focus:outline-none transition-colors duration-150`}
+              disabled={is360View}
+              className={`p-5 text-2xl ${btn.className || 'bg-gray-600 hover:bg-gray-700'} focus:outline-none transition-colors duration-150 disabled:opacity-50`}
             >
               {btn.label}
             </button>
@@ -759,16 +796,17 @@ const AndroidProMaxPhone = () => {
 
   const WeatherApp = memo(({data, setData}: {data: typeof weatherData, setData: typeof setWeatherData}) => {
     useEffect(() => {
+      if (is360View) return;
       const interval = setInterval(() => {
         setData(prev => ({
           ...prev,
-          temperature: prev.temperature + (Math.random() > 0.5 ? 1 : -1) % 5 + 20, // Fluctuate around 20-24
+          temperature: prev.temperature + (Math.random() > 0.5 ? 1 : -1) % 5 + 20,
           humidity: Math.min(100, Math.max(0, prev.humidity + (Math.random() > 0.5 ? 2 : -2))),
           windSpeed: Math.max(0, prev.windSpeed + (Math.random() > 0.5 ? 1 : -1))
         }));
-      }, 5000); // Update every 5 seconds
+      }, 5000);
       return () => clearInterval(interval);
-    }, [setData]);
+    }, [setData, is360View]);
 
     return (
       <div className="p-6 flex flex-col items-center justify-center h-full text-white bg-gradient-to-br from-blue-500 to-indigo-700">
@@ -805,85 +843,124 @@ const AndroidProMaxPhone = () => {
       case 'Weather': return <WeatherApp data={weatherData} setData={setWeatherData} />;
       case 'Music': return <PlaceholderApp appName="Music" />;
       case 'Gallery': return <PlaceholderApp appName="Gallery" />;
-      default: return ( // Should only be visible if !isLocked and !showApps and !currentApp
-        <div className="w-full h-full bg-black flex items-center justify-center">
-            {/* This state should ideally not be reached if logic is correct, means powered on, unlocked, but no app and not showing app list. */}
-        </div>
-      );
+      default: return null; // Should not be reached if logic is sound, covered by AppList display
     }
   };
 
-
+  // Main layout with 360 view button and perspective
   return (
-    <div className="relative w-full min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 py-8">
-      {/* Guide and App Descriptions (unchanged) */}
-      <div className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 backdrop-blur-lg rounded-2xl p-6 text-white text-sm max-w-xs z-10">
-        <h3 className="font-bold mb-4 text-lg">📱 Phone Guide</h3>
-        <div className="space-y-3">
-          <div><span className="font-semibold">⚡ Power:</span> Right edge button</div>
-          <div><span className="font-semibold">🔊 Volume:</span> Left edge buttons</div>
-          <div><span className="font-semibold">📱 Apps:</span> Tap icons to open</div>
-          <div><span className="font-semibold">📷 Camera:</span> Uses your webcam</div>
-          <div><span className="font-semibold">🔗 Links:</span> GitHub & LinkedIn</div>
-        </div>
-        <button
-          onClick={() => setShowGuide(!showGuide)}
-          className="mt-4 px-4 py-2 bg-blue-600 rounded-full text-xs hover:bg-blue-700 transition-colors"
-        >
-          {showGuide ? 'Hide' : 'Show'} Details
-        </button>
-        {showGuide && (
-          <div className="mt-4 space-y-2 text-xs opacity-80">
-            <div>• Realistic phone interactions</div>
-            <div>• Working camera & apps</div>
-            <div>• Volume controls with OSD</div>
-            <div>• Professional portfolio piece</div>
-          </div>
-        )}
-      </div>
-      <div className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 backdrop-blur-lg rounded-2xl p-6 text-white text-sm max-w-xs z-10">
-        <h3 className="font-bold mb-4 text-lg">📱 Available Apps</h3>
-        <div className="space-y-2">
-          {apps.filter(app => app.name !== 'Music' && app.name !== 'Gallery').slice(0, 7).map((app) => (
-            <div key={app.name} className="flex items-start gap-3">
-              <AppIcon icon={app.icon} className="w-8 h-8 mt-0.5" />
-              <div>
-                <div className="font-semibold">{app.name}</div>
-                <div className="text-xs opacity-80">{app.description}</div>
-              </div>
+    <div className="relative w-full min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 py-8"
+         style={is360View ? { perspective: '1000px' } : {}}
+    >
+      {!is360View && ( // Hide guides and app lists when in 360 view for clarity
+        <>
+          <div className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 backdrop-blur-lg rounded-2xl p-6 text-white text-sm max-w-xs z-10">
+            <h3 className="font-bold mb-4 text-lg">📱 Phone Guide</h3>
+            <div className="space-y-3">
+              <div><span className="font-semibold">🔓 PIN:</span> 1234</div>
+              <div><span className="font-semibold">⚡ Power:</span> Right edge button</div>
+              <div><span className="font-semibold">🔊 Volume:</span> Left edge buttons</div>
+              <div><span className="font-semibold">📱 Apps:</span> Tap icons to open</div>
+              <div><span className="font-semibold">📷 Camera:</span> Uses your webcam</div>
+              <div><span className="font-semibold">🔗 Links:</span> GitHub & LinkedIn</div>
             </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Pro Max Phone Frame (structure unchanged) */}
-      <div className="relative w-96 h-[800px] bg-gradient-to-b from-gray-800 via-gray-900 to-black rounded-[48px] shadow-2xl overflow-hidden select-none">
+            <button
+              onClick={() => setShowGuide(!showGuide)}
+              className="mt-4 px-4 py-2 bg-blue-600 rounded-full text-xs hover:bg-blue-700 transition-colors"
+            >
+              {showGuide ? 'Hide' : 'Show'} Details
+            </button>
+            {showGuide && (
+              <div className="mt-4 space-y-2 text-xs opacity-80">
+                <div>• Realistic phone interactions</div>
+                <div>• Working camera & apps</div>
+                <div>• Auto-unlock with correct PIN</div>
+                <div>• Volume controls with OSD</div>
+                <div>• Professional portfolio piece</div>
+              </div>
+            )}
+          </div>
+          <div className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 backdrop-blur-lg rounded-2xl p-6 text-white text-sm max-w-xs z-10">
+            <h3 className="font-bold mb-4 text-lg">📱 Available Apps</h3>
+            <div className="space-y-2">
+              {apps.filter(app => app.name !== 'Music' && app.name !== 'Gallery').slice(0, 7).map((app) => (
+                <div key={app.name} className="flex items-start gap-3">
+                  <AppIcon icon={app.icon} className="w-8 h-8 mt-0.5" />
+                  <div>
+                    <div className="font-semibold">{app.name}</div>
+                    <div className="text-xs opacity-80">{app.description}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
+      
+      <button
+        onClick={handleToggle360View}
+        className="fixed bottom-4 right-1/2 translate-x-1/2 md:right-4 md:translate-x-0 bg-purple-600 text-white px-6 py-3 rounded-lg shadow-xl hover:bg-purple-700 transition z-[100] text-sm font-semibold"
+      >
+        {is360View ? 'Exit 360° View' : 'Enter 360° View'}
+      </button>
+      
+      <div
+        ref={phoneFrameRef}
+        className="relative w-96 h-[800px] bg-gradient-to-b from-gray-800 via-gray-900 to-black rounded-[48px] shadow-2xl overflow-hidden select-none cursor-grab active:cursor-grabbing"
+        style={is360View ? { transform: `rotateY(${rotationY}deg)`, transition: isDragging360 ? 'none' : 'transform 0.5s ease-out', cursor: 'grab' } : {}}
+        onMouseDown={handle360MouseDown}
+      >
         <div className="absolute inset-0 bg-gradient-to-b from-gray-600 via-gray-700 to-gray-800 rounded-[48px] p-2">
           <div className="w-full h-full bg-gradient-to-b from-gray-800 via-gray-900 to-black rounded-[40px] overflow-hidden">
-            <div className="absolute top-2 left-1/2 transform -translate-x-1/2 w-32 h-6 bg-black rounded-full z-40 flex items-center justify-center shadow-lg">
+            {/* Notch is always visible unless phone is completely invisible due to rotation */}
+            <div className={`absolute top-2 left-1/2 transform -translate-x-1/2 w-32 h-6 bg-black rounded-full z-40 flex items-center justify-center shadow-lg ${is360View ? 'opacity-80' : 'opacity-100'}`}>
               <div className="w-4 h-4 bg-gray-800 rounded-full mr-4 border border-gray-600"></div>
               <div className="w-8 h-2 bg-gray-800 rounded-full border border-gray-600"></div>
             </div>
 
-            <button onClick={handlePowerPress} className="absolute right-[-4px] top-32 w-2 h-16 bg-gradient-to-r from-gray-600 to-gray-500 rounded-l-lg hover:from-gray-500 hover:to-gray-400 transition-all duration-200 active:scale-95 z-50 shadow-lg" />
-            <button onClick={handleVolumeUp} className="absolute left-[-4px] top-28 w-2 h-12 bg-gradient-to-r from-gray-500 to-gray-600 rounded-r-lg hover:from-gray-400 hover:to-gray-500 transition-all duration-200 active:scale-95 shadow-lg" />
-            <button onClick={handleVolumeDown} className="absolute left-[-4px] top-44 w-2 h-12 bg-gradient-to-r from-gray-500 to-gray-600 rounded-r-lg hover:from-gray-400 hover:to-gray-500 transition-all duration-200 active:scale-95 shadow-lg" />
-            <div className="absolute left-[-3px] top-20 w-1.5 h-6 bg-gray-600 rounded-r shadow-lg"></div>
+            {/* Physical Buttons - conditionally enable/disable styling and onClick */}
+            <button 
+                onClick={!is360View ? handlePowerPress : undefined} 
+                className={`absolute right-[-4px] top-32 w-2 h-16 bg-gradient-to-r from-gray-600 to-gray-500 rounded-l-lg z-50 shadow-lg 
+                            ${is360View ? 'opacity-70 cursor-default' : 'hover:from-gray-500 hover:to-gray-400 active:scale-95 transition-all duration-200'}`} 
+                disabled={is360View}
+            />
+            <button 
+                onClick={!is360View ? handleVolumeUp : undefined} 
+                className={`absolute left-[-4px] top-28 w-2 h-12 bg-gradient-to-r from-gray-500 to-gray-600 rounded-r-lg shadow-lg 
+                            ${is360View ? 'opacity-70 cursor-default' : 'hover:from-gray-400 hover:to-gray-500 active:scale-95 transition-all duration-200'}`} 
+                disabled={is360View}
+            />
+            <button 
+                onClick={!is360View ? handleVolumeDown : undefined} 
+                className={`absolute left-[-4px] top-44 w-2 h-12 bg-gradient-to-r from-gray-500 to-gray-600 rounded-r-lg shadow-lg 
+                            ${is360View ? 'opacity-70 cursor-default' : 'hover:from-gray-400 hover:to-gray-500 active:scale-95 transition-all duration-200'}`} 
+                disabled={is360View}
+            />
+            <div className={`absolute left-[-3px] top-20 w-1.5 h-6 bg-gray-600 rounded-r shadow-lg ${is360View ? 'opacity-70' : ''}`}></div>
 
-            {/* Screen */}
-            <div className={`w-full h-full transition-opacity duration-500 ${ isPoweredOn ? 'opacity-100' : 'opacity-0' }
+
+            {/* Screen Content */}
+            <div className={`w-full h-full transition-opacity duration-500 
+                           ${ is360View ? 'opacity-100' : (isPoweredOn ? 'opacity-100' : 'opacity-0') } 
                            bg-gradient-to-br from-blue-900 via-purple-900 to-pink-900 relative overflow-hidden rounded-[36px] border-2 border-gray-700`}>
-
-              {isPoweredOn && (
+              
+              {is360View ? (
+                <div className="w-full h-full bg-black rounded-[36px]"></div> // Phone screen is off during 360
+              ) : isPoweredOn ? (
                 <div className="w-full h-full text-white relative flex flex-col">
                   <StatusBar />
                   <VolumeOSD />
-
-                  <div className="flex-grow overflow-hidden">
+                  
+                  <div className="flex-grow overflow-hidden"> 
                     {isLocked ? (
                       <LockScreen />
-                    ) : showApps ? (
-                      <div className="h-full pt-8 overflow-y-auto app-content-scrollbar">
+                    ) : currentApp ? (
+                      <div className="h-full pt-8 pb-16 overflow-y-auto app-content-scrollbar"> 
+                        {renderCurrentApp()}
+                      </div>
+                    ) : ( // Default to App List (Home Screen) if unlocked and no current app
+                      <div className="h-full pt-8 overflow-y-auto app-content-scrollbar"> 
                         <div className="text-center mt-8 mb-6 px-6">
                             <div className="text-6xl font-thin">{currentTime.replace(/:\d\d /, ' ')}</div>
                             <div className="text-xl opacity-80">{currentDate}</div>
@@ -894,27 +971,21 @@ const AndroidProMaxPhone = () => {
                               key={app.name}
                               onClick={() => openAppOrLink(app)}
                               className="flex flex-col items-center justify-start gap-1.5 p-2 rounded-2xl hover:bg-white hover:bg-opacity-10 transition-all duration-200 focus:outline-none focus:bg-white focus:bg-opacity-20"
-                              style={{minHeight: '5rem'}}
+                              style={{minHeight: '5rem'}} 
                             >
-                              <AppIcon icon={app.icon} className="w-12 h-12" />
+                              <AppIcon icon={app.icon} className="w-12 h-12" /> 
                               <div className="text-white text-xs font-medium text-center">{app.name}</div>
                             </button>
                           ))}
                         </div>
                       </div>
-                    ) : currentApp ? (
-                      renderCurrentApp()
-                    ) : (
-                      <div className="w-full h-full bg-black flex items-center justify-center">
-                        {/* Fallback state */}
-                      </div>
                     )}
                   </div>
-
-                  <NavigationBar />
+                  {!isLocked && <NavigationBar /> /* Show nav bar only if unlocked */}
                 </div>
+              ) : (
+                <div className="w-full h-full bg-black rounded-[36px]"></div> // Phone is off
               )}
-              {!isPoweredOn && <div className="w-full h-full bg-black rounded-[36px]"></div>}
             </div>
           </div>
         </div>
@@ -923,6 +994,10 @@ const AndroidProMaxPhone = () => {
         .app-content-scrollbar::-webkit-scrollbar { width: 4px; }
         .app-content-scrollbar::-webkit-scrollbar-thumb { background-color: rgba(255,255,255,0.2); border-radius: 4px; }
         .app-content-scrollbar::-webkit-scrollbar-track { background-color: transparent; }
+        body {
+          // Potentially prevent scrolling body when dragging phone
+          // overflow: ${is360View && isDragging360 ? 'hidden' : 'auto'};
+        }
       `}</style>
     </div>
   );
