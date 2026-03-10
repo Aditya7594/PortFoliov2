@@ -25,13 +25,20 @@ const skills: Skill[] = [
   { name: 'Pandas', level: 85, color: '#150458', category: 'Data', icon: '🐼' },
 ];
 
-const SkillCard = ({ skill, index, isSpread, hoveredCard, setHoveredCard }: {
+const SkillCard = ({ skill, index, isSpread, hoveredCard, setHoveredCard, windowWidth }: {
   skill: Skill;
   index: number;
   isSpread: boolean;
   hoveredCard: number | null;
   setHoveredCard: (index: number | null) => void;
+  windowWidth: number;
 }) => {
+  const isMobile = windowWidth < 768;
+  const isTablet = windowWidth >= 768 && windowWidth < 1024;
+
+  const cardWidth = isMobile ? 120 : 180;
+  const cardHeight = isMobile ? 160 : 250;
+
   const getCardPosition = () => {
     if (!isSpread) {
       // Stacked position - slight offset for depth effect
@@ -45,26 +52,25 @@ const SkillCard = ({ skill, index, isSpread, hoveredCard, setHoveredCard }: {
     }
 
     // Spread positions in a circular/grid pattern
-    const cols = 6;
+    const cols = isMobile ? 2 : isTablet ? 3 : 5;
     const rows = Math.ceil(skills.length / cols);
     const col = index % cols;
     const row = Math.floor(index / cols);
-    
-    const cardWidth = 200;
-    const cardHeight = 280;
-    const spacing = 50;
-    
-    const totalWidth = (cols - 1) * (cardWidth + spacing);
-    const totalHeight = (rows - 1) * (cardHeight + spacing);
-    
-    const x = (col * (cardWidth + spacing)) - (totalWidth / 2);
-    const y = (row * (cardHeight + spacing)) - (totalHeight / 2);
-    
+
+    const spacingX = isMobile ? 10 : 30;
+    const spacingY = isMobile ? 20 : 40;
+
+    const totalWidth = (cols - 1) * (cardWidth + spacingX);
+    const totalHeight = (rows - 1) * (cardHeight + spacingY);
+
+    const x = (col * (cardWidth + spacingX)) - (totalWidth / 2);
+    const y = (row * (cardHeight + spacingY)) - (totalHeight / 2);
+
     return {
       x,
       y,
       rotate: 0,
-      scale: hoveredCard === index ? 1.1 : 1,
+      scale: hoveredCard === index ? (isMobile ? 1.05 : 1.1) : 1,
       zIndex: hoveredCard === index ? 100 : 10 + index
     };
   };
@@ -75,8 +81,8 @@ const SkillCard = ({ skill, index, isSpread, hoveredCard, setHoveredCard }: {
     <motion.div
       className="absolute cursor-pointer"
       style={{
-        width: 180,
-        height: 250,
+        width: cardWidth,
+        height: cardHeight,
         left: '50%',
         top: '50%',
         transformOrigin: 'center center'
@@ -100,16 +106,17 @@ const SkillCard = ({ skill, index, isSpread, hoveredCard, setHoveredCard }: {
         type: 'spring',
         stiffness: isSpread ? 120 : 200,
         damping: isSpread ? 15 : 20,
-        delay: isSpread ? index * 0.1 : (skills.length - index) * 0.05,
+        delay: isSpread ? index * (isMobile ? 0.05 : 0.1) : (skills.length - index) * 0.05,
         duration: 0.6
       }}
       whileHover={{
-        scale: isSpread ? 1.15 : 1.05,
-        y: isSpread ? cardPosition.y - 20 : cardPosition.y - 10,
+        scale: isSpread ? (isMobile ? 1.05 : 1.15) : 1.05,
+        y: isSpread ? cardPosition.y - 10 : cardPosition.y - 10,
         transition: { duration: 0.2 }
       }}
       onHoverStart={() => setHoveredCard(index)}
       onHoverEnd={() => setHoveredCard(null)}
+      onClick={() => setHoveredCard(hoveredCard === index ? null : index)}
     >
       <motion.div
         className="w-full h-full rounded-2xl shadow-2xl relative overflow-hidden transform-gpu"
@@ -124,18 +131,18 @@ const SkillCard = ({ skill, index, isSpread, hoveredCard, setHoveredCard }: {
         }}
       >
         {/* Card Background Pattern */}
-        <div 
+        <div
           className="absolute inset-0 opacity-10"
           style={{
             backgroundImage: `radial-gradient(circle at 20% 20%, ${skill.color} 1px, transparent 1px)`,
             backgroundSize: '20px 20px'
           }}
         />
-        
+
         {/* Category Badge */}
-        <div className="absolute top-3 right-3">
-          <span 
-            className="px-2 py-1 rounded-full text-xs font-medium text-white"
+        <div className="absolute top-2 right-2 sm:top-3 sm:right-3">
+          <span
+            className="px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-full text-[9px] sm:text-xs font-medium text-white whitespace-nowrap"
             style={{ backgroundColor: `${skill.color}80` }}
           >
             {skill.category}
@@ -143,10 +150,10 @@ const SkillCard = ({ skill, index, isSpread, hoveredCard, setHoveredCard }: {
         </div>
 
         {/* Main Content */}
-        <div className="flex flex-col items-center justify-center h-full p-4 text-center">
+        <div className="flex flex-col items-center justify-center h-full p-2 sm:p-4 text-center mt-2 sm:mt-0">
           {/* Icon */}
           <motion.div
-            className="text-6xl mb-4"
+            className="text-4xl sm:text-6xl mb-2 sm:mb-4"
             animate={{
               rotate: hoveredCard === index ? [0, -10, 10, 0] : 0,
               scale: hoveredCard === index ? [1, 1.1, 1] : 1
@@ -157,43 +164,43 @@ const SkillCard = ({ skill, index, isSpread, hoveredCard, setHoveredCard }: {
           </motion.div>
 
           {/* Skill Name */}
-          <h3 className="text-xl font-bold text-white mb-2 drop-shadow-lg">
+          <h3 className="text-sm sm:text-xl font-bold text-white mb-1 sm:mb-2 drop-shadow-lg">
             {skill.name}
           </h3>
 
           {/* Proficiency Level */}
-          <div className="w-full mb-3">
-            <div className="flex justify-between items-center mb-1">
-              <span className="text-sm text-gray-200">Proficiency</span>
-              <span className="text-sm font-bold text-white">{skill.level}%</span>
+          <div className="w-full mb-1 sm:mb-3 px-1 sm:px-0">
+            <div className="flex justify-between items-center mb-0.5 sm:mb-1">
+              <span className="text-[10px] sm:text-sm text-gray-200">Level</span>
+              <span className="text-[10px] sm:text-sm font-bold text-white">{skill.level}%</span>
             </div>
-            <div className="w-full bg-white/20 rounded-full h-2 overflow-hidden">
+            <div className="w-full bg-white/20 rounded-full h-1 sm:h-2 overflow-hidden">
               <motion.div
                 className="h-full rounded-full"
                 style={{ backgroundColor: skill.color }}
                 initial={{ width: 0 }}
                 animate={{ width: `${skill.level}%` }}
-                transition={{ 
-                  duration: 1.5, 
+                transition={{
+                  duration: 1.5,
                   delay: isSpread ? index * 0.1 + 0.5 : 0,
-                  ease: "easeOut" 
+                  ease: "easeOut"
                 }}
               />
             </div>
           </div>
 
-          {/* Experience Indicator */}
-          <div className="flex space-x-1">
+          {/* Experience Indicator - Hidden on small screens */}
+          <div className="hidden sm:flex space-x-1">
             {[...Array(5)].map((_, i) => (
               <motion.div
                 key={i}
-                className="w-2 h-2 rounded-full"
-                style={{ 
-                  backgroundColor: i < Math.floor(skill.level / 20) ? skill.color : '#ffffff40' 
+                className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full"
+                style={{
+                  backgroundColor: i < Math.floor(skill.level / 20) ? skill.color : '#ffffff40'
                 }}
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
-                transition={{ 
+                transition={{
                   delay: isSpread ? index * 0.1 + 0.8 + (i * 0.1) : 0.5 + (i * 0.1),
                   type: 'spring',
                   stiffness: 200
@@ -217,9 +224,9 @@ const SkillCard = ({ skill, index, isSpread, hoveredCard, setHoveredCard }: {
                 animate={{ y: 0, opacity: 1 }}
                 className="text-white text-sm font-medium px-4 text-center"
               >
-                {skill.level >= 80 ? 'Expert Level' : 
-                 skill.level >= 60 ? 'Advanced' : 
-                 'Intermediate'}
+                {skill.level >= 80 ? 'Expert Level' :
+                  skill.level >= 60 ? 'Advanced' :
+                    'Intermediate'}
               </motion.p>
             </motion.div>
           )}
@@ -233,18 +240,26 @@ const Skills = () => {
   const [inView, setInView] = useState(false);
   const [isSpread, setIsSpread] = useState(false);
   const [hoveredCard, setHoveredCard] = useState<number | null>(null);
+  const [windowWidth, setWindowWidth] = useState(1200);
   const sectionRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setWindowWidth(window.innerWidth);
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
       if (!sectionRef.current) return;
-      
+
       const rect = sectionRef.current.getBoundingClientRect();
       const isVisible = rect.top < window.innerHeight - 200 && rect.bottom > 200;
-      
+
       if (isVisible !== inView) {
         setInView(isVisible);
-        
+
         // Add slight delay for spread animation
         if (isVisible) {
           setTimeout(() => setIsSpread(true), 300);
@@ -256,32 +271,32 @@ const Skills = () => {
 
     window.addEventListener('scroll', handleScroll, { passive: true });
     handleScroll(); // Initial check
-    
+
     return () => window.removeEventListener('scroll', handleScroll);
   }, [inView]);
 
   return (
-    <section 
-      id="skills" 
+    <section
+      id="skills"
       className="py-20 bg-gradient-to-br from-gray-900 via-black to-gray-900 relative overflow-hidden min-h-screen"
       ref={sectionRef}
     >
       {/* Background Effects */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(59,130,246,0.1),transparent_70%)]" />
       <div className="absolute inset-0 bg-[conic-gradient(from_0deg,transparent,rgba(147,51,234,0.1),transparent)]" />
-      
+
       <div className="container mx-auto px-4 relative z-10">
         {/* Header */}
         <div className="text-center mb-16">
           <motion.h2
             className="text-5xl md:text-6xl font-bold mb-6"
             initial={{ opacity: 0, y: 30 }}
-            animate={{ 
-              opacity: inView ? 1 : 0, 
+            animate={{
+              opacity: inView ? 1 : 0,
               y: inView ? 0 : 30,
               backgroundPosition: inView ? ['0% 50%', '100% 50%', '0% 50%'] : '0% 50%'
             }}
-            transition={{ 
+            transition={{
               duration: 0.8,
               backgroundPosition: { duration: 4, repeat: Infinity, ease: "linear" }
             }}
@@ -294,7 +309,7 @@ const Skills = () => {
           >
             Technical Skills
           </motion.h2>
-          
+
           <motion.p
             className="text-gray-400 text-xl max-w-3xl mx-auto mb-8"
             initial={{ opacity: 0, y: 20 }}
@@ -314,7 +329,7 @@ const Skills = () => {
             <span className="text-white font-medium">{skills.length} Skills</span>
             <motion.span
               className="w-2 h-2 bg-green-400 rounded-full"
-              animate={{ 
+              animate={{
                 opacity: [1, 0.5, 1],
                 scale: [1, 1.2, 1]
               }}
@@ -324,7 +339,7 @@ const Skills = () => {
         </div>
 
         {/* Cards Container */}
-        <div className="relative h-[800px] flex items-center justify-center">
+        <div className="relative h-[1100px] sm:h-[800px] flex items-center justify-center px-2">
           <motion.div
             className="relative w-full h-full"
             animate={{
@@ -342,6 +357,7 @@ const Skills = () => {
                 isSpread={isSpread}
                 hoveredCard={hoveredCard}
                 setHoveredCard={setHoveredCard}
+                windowWidth={windowWidth}
               />
             ))}
           </motion.div>

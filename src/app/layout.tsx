@@ -6,7 +6,7 @@ import { ThemeProvider } from '@/lib/theme';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Your Portfolio',
+  title: 'Aditya Nayak',
   description: 'Welcome to my portfolio website',
   icons: {
     icon: '/PortFoliov2/favicon.ico',

@@ -24,7 +24,7 @@ const Header = () => {
       }
       return false;
     });
-    
+
     if (currentSection) {
       setActiveSection(currentSection);
     }
@@ -32,7 +32,7 @@ const Header = () => {
 
   useEffect(() => {
     let timeoutId: ReturnType<typeof setTimeout> | null = null;
-    
+
     const throttledScroll = () => {
       if (timeoutId === null) {
         timeoutId = setTimeout(() => {
@@ -43,10 +43,10 @@ const Header = () => {
     };
 
     window.addEventListener('scroll', throttledScroll, { passive: true });
-    
+
     // Initial call to set correct state
     handleScroll();
-    
+
     return () => {
       window.removeEventListener('scroll', throttledScroll);
       if (timeoutId) {
@@ -98,7 +98,7 @@ const Header = () => {
     // Smooth scroll to section
     const element = document.querySelector(href);
     if (element) {
-      element.scrollIntoView({ 
+      element.scrollIntoView({
         behavior: 'smooth',
         block: 'start'
       });
@@ -110,11 +110,10 @@ const Header = () => {
       initial={{ y: -100, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.5, ease: "easeOut" }}
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ease-in-out ${
-        isScrolled 
-          ? 'bg-black/90 backdrop-blur-lg shadow-lg border-b border-white/10' 
-          : 'bg-transparent'
-      }`}
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ease-in-out ${isScrolled || isMobileMenuOpen
+        ? 'bg-[#0a0a0a] shadow-lg border-b border-white/10'
+        : 'bg-transparent'
+        }`}
     >
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 lg:h-20">
@@ -123,8 +122,8 @@ const Header = () => {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
-            <Link 
-              href="#home" 
+            <Link
+              href="#home"
               className="text-xl lg:text-2xl font-bold text-white hover:text-blue-400 transition-colors duration-300"
               onClick={() => handleLinkClick('#home')}
             >
@@ -153,14 +152,13 @@ const Header = () => {
                     e.preventDefault();
                     handleLinkClick(link.href);
                   }}
-                  className={`relative px-3 py-2 text-sm lg:text-base font-medium transition-all duration-300 rounded-lg group ${
-                    activeSection === link.href.substring(1)
-                      ? 'text-blue-400'
-                      : 'text-gray-300 hover:text-white'
-                  }`}
+                  className={`relative px-3 py-2 text-sm lg:text-base font-medium transition-all duration-300 rounded-lg group ${activeSection === link.href.substring(1)
+                    ? 'text-blue-400'
+                    : 'text-gray-300 hover:text-white'
+                    }`}
                 >
                   {link.name}
-                  
+
                   {/* Active indicator */}
                   {activeSection === link.href.substring(1) && (
                     <motion.div
@@ -170,7 +168,7 @@ const Header = () => {
                       transition={{ type: "spring", stiffness: 380, damping: 30 }}
                     />
                   )}
-                  
+
                   {/* Hover effect */}
                   <motion.div
                     className="absolute inset-0 bg-white/5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300"
@@ -182,53 +180,34 @@ const Header = () => {
           </nav>
 
           {/* Mobile Menu Button */}
-          <motion.button
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            className="md:hidden relative p-2 text-gray-300 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50 rounded-lg transition-colors duration-300"
+          <button
+            className="md:hidden relative p-2 text-gray-300 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50 rounded-lg transition-colors duration-300 z-50"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             aria-label="Toggle mobile menu"
             aria-expanded={isMobileMenuOpen}
           >
-            <motion.div
-              animate={isMobileMenuOpen ? "open" : "closed"}
-              className="w-6 h-6 relative"
-            >
-              <motion.span
-                variants={{
-                  closed: { rotate: 0, y: 0 },
-                  open: { rotate: 45, y: 6 }
-                }}
-                className="absolute top-0 left-0 w-full h-0.5 bg-current transform origin-center transition-all duration-300"
-              />
-              <motion.span
-                variants={{
-                  closed: { opacity: 1 },
-                  open: { opacity: 0 }
-                }}
-                className="absolute top-2.5 left-0 w-full h-0.5 bg-current transition-all duration-300"
-              />
-              <motion.span
-                variants={{
-                  closed: { rotate: 0, y: 0 },
-                  open: { rotate: -45, y: -6 }
-                }}
-                className="absolute top-5 left-0 w-full h-0.5 bg-current transform origin-center transition-all duration-300"
-              />
-            </motion.div>
-          </motion.button>
+            {isMobileMenuOpen ? (
+              <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            ) : (
+              <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            )}
+          </button>
         </div>
       </div>
 
       {/* Mobile Menu */}
-      <AnimatePresence mode="wait">
+      <AnimatePresence>
         {isMobileMenuOpen && (
           <motion.div
-            initial={{ opacity: 0, height: 0, y: -20 }}
-            animate={{ opacity: 1, height: 'auto', y: 0 }}
-            exit={{ opacity: 0, height: 0, y: -20 }}
-            transition={{ duration: 0.3, ease: "easeInOut" }}
-            className="md:hidden bg-black/95 backdrop-blur-lg border-t border-white/10"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+            className="md:hidden absolute top-full left-0 right-0 bg-[#0a0a0a] border-b border-white/10 shadow-2xl"
           >
             <nav className="container mx-auto px-4 py-6">
               <div className="flex flex-col space-y-1">
@@ -242,11 +221,10 @@ const Header = () => {
                   >
                     <Link
                       href={link.href}
-                      className={`block px-4 py-3 text-lg font-medium rounded-lg transition-all duration-300 ${
-                        activeSection === link.href.substring(1)
-                          ? 'text-blue-400 bg-blue-400/10'
-                          : 'text-gray-300 hover:text-white hover:bg-white/5'
-                      }`}
+                      className={`block px-4 py-3 text-lg font-medium rounded-lg transition-all duration-300 ${activeSection === link.href.substring(1)
+                        ? 'text-blue-400 bg-blue-400/10'
+                        : 'text-gray-300 hover:text-white hover:bg-white/5'
+                        }`}
                       onClick={(e) => {
                         e.preventDefault();
                         handleLinkClick(link.href);

@@ -8,10 +8,10 @@ import Contact from '@/components/main/contact';
 import Header from '@/components/layout/header';
 import About from '@/components/main/about';
 import AndroidPhone from '@/components/main/android-phone';
+import Timeline from '@/components/main/Timeline';
 
 export default function Home() {
   useEffect(() => {
-    // Handle hash navigation on initial load
     const hash = window.location.hash;
     if (hash) {
       const element = document.querySelector(hash);
@@ -35,6 +35,9 @@ export default function Home() {
         </section>
         <section id="about" className="min-h-screen">
           <About />
+        </section>
+        <section id="timeline">
+          <Timeline />
         </section>
         <section id="projects" className="min-h-screen">
           <Projects />

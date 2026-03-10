@@ -5,14 +5,13 @@ import Image from 'next/image';
 const Hero = () => {
   const [typedText, setTypedText] = useState('');
   const [currentRole, setCurrentRole] = useState(0);
-  // --- Card top-spin animation state ---
-  const [isSpinning, setIsSpinning] = useState(false);
-  const [showBack, setShowBack] = useState(false);
+  const [isFlipped, setIsFlipped] = useState(false);
+  const [isAnimating, setIsAnimating] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  
+
   const roles = useMemo(() => [
     'Full Stack Developer',
-    'Mobile App Developer', 
+    'Mobile App Developer',
     'AI/ML Enthusiast',
     'Problem Solver',
     'Tech Innovator'
@@ -28,7 +27,7 @@ const Hero = () => {
   };
   const particlesRef = useRef<Particle[]>([]);
 
-  // Typewriter effect (improved, non-blocking, smooth)
+  // Typewriter effect
   useEffect(() => {
     let timeoutId: NodeJS.Timeout;
     const role = roles[currentRole];
@@ -38,14 +37,14 @@ const Hero = () => {
       if (!isDeleting && localIndex < role.length) {
         setTypedText(role.substring(0, localIndex + 1));
         localIndex++;
-        timeoutId = setTimeout(type, 60); // Faster typing
+        timeoutId = setTimeout(type, 60);
       } else if (!isDeleting && localIndex === role.length) {
         isDeleting = true;
-        timeoutId = setTimeout(type, 1200); // Shorter pause before deleting
+        timeoutId = setTimeout(type, 1200);
       } else if (isDeleting && localIndex > 0) {
         setTypedText(role.substring(0, localIndex - 1));
         localIndex--;
-        timeoutId = setTimeout(type, 30); // Faster deleting
+        timeoutId = setTimeout(type, 30);
       } else if (isDeleting && localIndex === 0) {
         setCurrentRole((prev) => (prev + 1) % roles.length);
       }
@@ -58,11 +57,9 @@ const Hero = () => {
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Always set canvas size to window size before using
     function setCanvasSize() {
       if (!canvas) return;
       canvas.width = window.innerWidth;
@@ -70,10 +67,9 @@ const Hero = () => {
     }
     setCanvasSize();
 
-    // Initialize particles
     const initParticles = () => {
       particlesRef.current = [];
-      for (let i = 0; i < 100; i++) {
+      for (let i = 0; i < 80; i++) {
         particlesRef.current.push({
           x: Math.random() * canvas.width,
           y: Math.random() * canvas.height,
@@ -85,35 +81,25 @@ const Hero = () => {
       }
     };
 
+    let animFrameId: number;
     const animateParticles = () => {
-      // Defensive: check canvas size is valid
-      if (!isFinite(canvas.width) || !isFinite(canvas.height) || canvas.width === 0 || canvas.height === 0) {
-        setCanvasSize();
-      }
+      if (!canvas || !ctx) return;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      
       particlesRef.current.forEach((particle: Particle, index: number) => {
         particle.x += particle.speedX;
         particle.y += particle.speedY;
-
-        // Wrap around edges
         if (particle.x > canvas.width) particle.x = 0;
         if (particle.x < 0) particle.x = canvas.width;
         if (particle.y > canvas.height) particle.y = 0;
         if (particle.y < 0) particle.y = canvas.height;
-
-        // Draw particle
         ctx.beginPath();
         ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
         ctx.fillStyle = `rgba(139, 92, 246, ${particle.opacity})`;
         ctx.fill();
-
-        // Connect nearby particles
         particlesRef.current.slice(index + 1).forEach((otherParticle: Particle) => {
           const dx = particle.x - otherParticle.x;
           const dy = particle.y - otherParticle.y;
           const distance = Math.sqrt(dx * dx + dy * dy);
-
           if (distance < 100) {
             ctx.beginPath();
             ctx.moveTo(particle.x, particle.y);
@@ -123,8 +109,7 @@ const Hero = () => {
           }
         });
       });
-
-      requestAnimationFrame(animateParticles);
+      animFrameId = requestAnimationFrame(animateParticles);
     };
 
     initParticles();
@@ -134,31 +119,26 @@ const Hero = () => {
       setCanvasSize();
       initParticles();
     };
-
     window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      cancelAnimationFrame(animFrameId);
+    };
   }, []);
 
   const handleCardClick = () => {
-    if (isSpinning) return;
-    
-    setIsSpinning(true);
-    
-    // After spinning animation completes, flip the card and stop spinning
+    if (isAnimating) return;
+    setIsAnimating(true);
     setTimeout(() => {
-      setShowBack(!showBack);
-      setIsSpinning(false);
-    }, 1500); // 1.5s spin duration
+      setIsFlipped(prev => !prev);
+      setIsAnimating(false);
+    }, 300);
   };
 
   const glowText = (text: string) => (
     <span className="inline-block">
       {text.split('').map((char: string, i: number) => (
-        <span
-          key={i}
-          className="glow-text"
-          style={{ animationDelay: `${i * 0.07}s` }}
-        >
+        <span key={i} className="glow-text" style={{ animationDelay: `${i * 0.07}s` }}>
           {char === ' ' ? '\u00A0' : char}
         </span>
       ))}
@@ -168,10 +148,7 @@ const Hero = () => {
   return (
     <section className="relative min-h-screen w-full overflow-hidden bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
       {/* Particle Canvas */}
-      <canvas
-        ref={canvasRef}
-        className="absolute inset-0 z-0"
-      />
+      <canvas ref={canvasRef} className="absolute inset-0 z-0" />
 
       {/* 3D Box Loader Background */}
       <div className="absolute inset-0 z-0 flex items-center justify-center pointer-events-none">
@@ -188,16 +165,17 @@ const Hero = () => {
         </div>
       </div>
 
-      <div className="relative z-10 container mx-auto px-8 h-screen flex items-center">
-        <div className="flex flex-col lg:flex-row gap-16 items-center w-full">
+      <div className="relative z-10 container mx-auto px-4 sm:px-8 min-h-screen flex items-center py-24 sm:py-0">
+        <div className="flex flex-col lg:flex-row gap-10 lg:gap-16 items-center w-full">
+
           {/* Left Column - Text Content */}
-          <div className="flex-1 space-y-8 w-full lg:w-1/2">
-            <div className="space-y-6">
-              <div className="text-cyan-400 text-lg font-medium tracking-wider uppercase">
+          <div className="flex-1 space-y-6 sm:space-y-8 w-full text-center lg:text-left">
+            <div className="space-y-4 sm:space-y-6">
+              <div className="text-cyan-400 text-sm sm:text-lg font-medium tracking-wider uppercase">
                 Welcome to my digital world
               </div>
-              
-              <h1 className="text-5xl md:text-7xl font-bold leading-tight">
+
+              <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold leading-tight">
                 <div className="bg-gradient-to-r from-white via-blue-100 to-purple-100 bg-clip-text text-transparent mb-4">
                   {glowText("Hi, I'm")}
                 </div>
@@ -206,22 +184,22 @@ const Hero = () => {
                 </div>
               </h1>
 
-              <div className="text-2xl md:text-3xl font-semibold text-gray-300 h-12 flex items-center">
+              <div className="text-xl sm:text-2xl md:text-3xl font-semibold text-gray-300 h-10 sm:h-12 flex items-center justify-center lg:justify-start">
                 <span className="text-purple-400">I&apos;m a </span>
                 <span className="ml-2 text-white border-r-2 border-purple-400 pr-1 animate-pulse">
                   {typedText}
                 </span>
               </div>
 
-              <p className="text-gray-300 text-lg leading-relaxed max-w-2xl">
-                Passionate about creating innovative digital solutions that make a difference. 
+              <p className="text-gray-300 text-base sm:text-lg leading-relaxed max-w-2xl mx-auto lg:mx-0">
+                Passionate about creating innovative digital solutions that make a difference.
                 I transform ideas into reality through clean code, thoughtful design, and cutting-edge technology.
               </p>
             </div>
 
-            <div className="flex flex-wrap gap-6">
+            <div className="flex flex-wrap gap-4 sm:gap-6 justify-center lg:justify-start">
               <button
-                className="group relative px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full font-semibold text-white overflow-hidden transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-purple-500/25"
+                className="group relative px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full font-semibold text-white overflow-hidden transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-purple-500/25"
                 onClick={() => {
                   const el = document.querySelector('#projects');
                   if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -231,143 +209,168 @@ const Hero = () => {
                 <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
               </button>
               <button
-                className="px-8 py-4 border-2 border-purple-500 text-purple-400 rounded-full font-semibold hover:bg-purple-500 hover:text-white transition-all duration-300 backdrop-blur-sm"
+                className="px-6 sm:px-8 py-3 sm:py-4 border-2 border-purple-500 text-purple-400 rounded-full font-semibold hover:bg-purple-500 hover:text-white transition-all duration-300 backdrop-blur-sm"
                 onClick={() => {
-                  window.location.href = '#contact';
+                  const el = document.querySelector('#contact');
+                  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 }}
               >
                 Contact Me
               </button>
             </div>
 
-            <div className="flex gap-8 text-gray-400">
+            <div className="flex gap-6 sm:gap-8 text-gray-400 justify-center lg:justify-start">
               <div className="text-center">
-                <div className="text-2xl font-bold text-white">3+</div>
-                <div className="text-sm">Projects</div>
+                <div className="text-xl sm:text-2xl font-bold text-white">3+</div>
+                <div className="text-xs sm:text-sm">Projects</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-white">10</div>
-                <div className="text-sm">GitHub Repos</div>
+                <div className="text-xl sm:text-2xl font-bold text-white">10</div>
+                <div className="text-xs sm:text-sm">GitHub Repos</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-white">1</div>
-                <div className="text-sm">Badge</div>
+                <div className="text-xl sm:text-2xl font-bold text-white">1</div>
+                <div className="text-xs sm:text-sm">Badge</div>
               </div>
             </div>
           </div>
 
-          {/* Right Column - Interactive Card */}
-          <div className="flex-1 flex justify-center lg:justify-end w-full lg:w-1/2">
-            <div className="relative group">
-              {/* Spinning Top Card */}
-              <div
-                className="relative w-80 h-96 perspective-1000 cursor-pointer"
-                onClick={handleCardClick}
-              >
-                <div
-                  className={`relative w-full h-full preserve-3d transition-transform duration-500${
-                    isSpinning ? ' top-spin' : ''
-                  }${showBack ? ' flipped' : ''}`}
-                  style={{ transformStyle: 'preserve-3d', transition: 'transform 0.5s', transform: showBack ? 'rotateY(180deg)' : 'none' }}
-                >
-                  {/* Front of Card */}
-                  <div className="absolute inset-0 w-full h-full backface-hidden">
-                    <div className="relative w-full h-full bg-gradient-to-br from-slate-800 to-slate-900 rounded-3xl p-8 border border-white/10 shadow-2xl">
-                      <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 rounded-3xl blur opacity-30 group-hover:opacity-60 transition-opacity duration-500"></div>
-                      
-                      <div className="relative z-10 h-full flex flex-col items-center justify-center text-center">
-                        <div className="w-32 h-32 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 mb-6 flex items-center justify-center">
-                          <Image 
-                            src="/PortFoliov2/profile.jpg"
-                            alt="Aditya Nayak"
-                            width={112}
-                            height={112}
-                            className="w-28 h-28 rounded-full object-cover"
-                            style={{ boxShadow: '0 4px 24px 0 rgba(80, 70, 229, 0.25)' }}
-                          />
-                        </div>
-                        
-                        <h3 className="text-2xl font-bold text-white mb-2">Aditya Nayak</h3>
-                        <p className="text-purple-400 mb-4">BCA Student</p>
-                        
-                        <div className="space-y-3 w-full">
-                          <div className="flex items-center justify-between text-sm">
-                            <span className="text-gray-400">Location</span>
-                            <span className="text-white">India</span>
-                          </div>
-                          <div className="flex items-center justify-between text-sm">
-                            <span className="text-gray-400">Experience</span>
-                            <span className="text-white">2+ Years</span>
-                          </div>
-                          <div className="flex items-center justify-between text-sm">
-                            <span className="text-gray-400">Focus</span>
-                            <span className="text-white">Full Stack</span>
-                          </div>
-                        </div>
-                        
-                        <div className="mt-6 flex gap-3">
-                          <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-                          <span className="text-green-400 text-sm">Available for work</span>
-                        </div>
-                        
-                        <div className="mt-4 text-xs text-gray-500 opacity-60">
-                          Click to flip
-                        </div>
+          {/* Right Column - Interactive Flip Card */}
+          <div className="flex-1 flex justify-center lg:justify-end w-full">
+            <div
+              className="hero-card-scene cursor-pointer select-none"
+              onClick={handleCardClick}
+              title="Click to flip"
+            >
+              <div className={`hero-card-inner${isFlipped ? ' hero-card-flipped' : ''}${isAnimating ? ' hero-card-animating' : ''}`}>
+                {/* Front */}
+                <div className="hero-card-face hero-card-front">
+                  <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 rounded-3xl blur opacity-30 hover:opacity-60 transition-opacity duration-500 pointer-events-none"></div>
+                  <div className="relative z-10 h-full flex flex-col items-center justify-center text-center">
+                    <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 mb-6 flex items-center justify-center">
+                      <Image
+                        src="/PortFoliov2/profile.jpg"
+                        alt="Aditya Nayak"
+                        width={112}
+                        height={112}
+                        className="w-24 h-24 sm:w-28 sm:h-28 rounded-full object-cover"
+                        style={{ boxShadow: '0 4px 24px 0 rgba(80,70,229,0.25)' }}
+                      />
+                    </div>
+                    <h3 className="text-xl sm:text-2xl font-bold text-white mb-2">Aditya Nayak</h3>
+                    <p className="text-purple-400 mb-4">Full Stack Developer</p>
+                    <div className="space-y-3 w-full px-2">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-400">Location</span>
+                        <span className="text-white">India</span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-400">Experience</span>
+                        <span className="text-white">2+ Years</span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-400">Focus</span>
+                        <span className="text-white">Full Stack</span>
                       </div>
                     </div>
+                    <div className="mt-6 flex gap-3 items-center">
+                      <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                      <span className="text-green-400 text-sm">Available for work</span>
+                    </div>
+                    <div className="mt-4 text-xs text-gray-500">👆 Click to flip</div>
                   </div>
+                </div>
 
-                  {/* Back of Card */}
-                  <div className="absolute inset-0 w-full h-full backface-hidden rotate-y-180">
-                    <div className="w-full h-full bg-gradient-to-br from-slate-800 to-slate-900 rounded-3xl p-8 border border-white/10 shadow-2xl flex flex-col justify-center items-center text-center">
-                      <div className="absolute -inset-1 bg-gradient-to-r from-pink-600 via-purple-600 to-blue-600 rounded-3xl blur opacity-30"></div>
-                      
-                      <div className="relative z-10">
-                        <h3 className="text-2xl font-bold text-white mb-6">Contact Details</h3>
-                        <div className="space-y-4 w-full">
-                          <div className="flex items-center justify-between text-sm">
-                            <span className="text-gray-400">Age</span>
-                            <span className="text-white">19</span>
-                          </div>
-                          <div className="flex items-center justify-between text-sm">
-                            <span className="text-gray-400">DOB</span>
-                            <span className="text-white">23-07-2004</span>
-                          </div>
-                          <div className="flex flex-col items-center text-sm mb-3">
-                            <span className="text-gray-400 mb-1">Email</span>
-                            <span className="text-white text-xs">Adityanayak7594@gmail.com</span>
-                          </div>
-                          <div className="flex items-center justify-between text-sm">
-                            <span className="text-gray-400">GitHub</span>
-                            <a href="https://github.com/Aditya7594" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 transition-colors">
-                              @Aditya7594
-                            </a>
-                          </div>
-                          <div className="flex flex-col items-center text-sm">
-                            <span className="text-gray-400 mb-1">LinkedIn</span>
-                            <a 
-                              href="https://linkedin.com/in/aditya-nayak-5a549b341/" 
-                              target="_blank" 
-                              rel="noopener noreferrer" 
-                              className="text-blue-400 hover:text-blue-300 transition-colors text-xs"
-                            >
-                              aditya-nayak-5a549b341
-                            </a>
-                          </div>
-                        </div>
-                        
-                        <div className="mt-6 text-xs text-gray-500 opacity-60">
-                          Click to flip back
-                        </div>
+                {/* Back */}
+                <div className="hero-card-face hero-card-back">
+                  <div className="absolute -inset-1 bg-gradient-to-r from-pink-600 via-purple-600 to-blue-600 rounded-3xl blur opacity-30 pointer-events-none"></div>
+                  <div className="relative z-10 w-full">
+                    <h3 className="text-xl sm:text-2xl font-bold text-white mb-6">Contact Details</h3>
+                    <div className="space-y-4 w-full">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-400">Age</span>
+                        <span className="text-white">21</span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-400">DOB</span>
+                        <span className="text-white">23-07-2004</span>
+                      </div>
+                      <div className="flex flex-col text-sm gap-1">
+                        <span className="text-gray-400">Email</span>
+                        <span className="text-white text-xs break-all">Adityanayak7594@gmail.com</span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-400">GitHub</span>
+                        <a href="https://github.com/Aditya7594" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 transition-colors" onClick={e => e.stopPropagation()}>
+                          @Aditya7594
+                        </a>
+                      </div>
+                      <div className="flex flex-col text-sm gap-1">
+                        <span className="text-gray-400">LinkedIn</span>
+                        <a
+                          href="https://linkedin.com/in/aditya-nayak-5a549b341/"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-400 hover:text-blue-300 transition-colors text-xs"
+                          onClick={e => e.stopPropagation()}
+                        >
+                          aditya-nayak-5a549b341
+                        </a>
                       </div>
                     </div>
+                    <div className="mt-6 text-xs text-gray-500">👆 Click to flip back</div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
+
         </div>
       </div>
+
+      <style>{`
+        .hero-card-scene {
+          width: 300px;
+          height: 380px;
+          perspective: 1000px;
+        }
+        @media (min-width: 640px) {
+          .hero-card-scene {
+            width: 320px;
+            height: 400px;
+          }
+        }
+        .hero-card-inner {
+          position: relative;
+          width: 100%;
+          height: 100%;
+          transform-style: preserve-3d;
+          transition: transform 0.7s cubic-bezier(0.4, 0.2, 0.2, 1);
+        }
+        .hero-card-inner.hero-card-flipped {
+          transform: rotateY(180deg);
+        }
+        .hero-card-face {
+          position: absolute;
+          inset: 0;
+          backface-visibility: hidden;
+          -webkit-backface-visibility: hidden;
+          background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+          border-radius: 1.5rem;
+          border: 1px solid rgba(255,255,255,0.1);
+          box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+          padding: 2rem;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          text-align: center;
+          overflow: hidden;
+        }
+        .hero-card-back {
+          transform: rotateY(180deg);
+        }
+      `}</style>
     </section>
   );
 };
