@@ -65,7 +65,7 @@ const About = () => {
           let totalForks = 0;
           const langCounts: Record<string, number> = {};
 
-          reposData.forEach((repo: any) => {
+          reposData.forEach((repo: { stargazers_count: number; forks_count: number; language: string | null }) => {
             totalStars += repo.stargazers_count;
             totalForks += repo.forks_count;
             if (repo.language) {
@@ -229,7 +229,7 @@ const About = () => {
                   Top Languages
                 </h4>
                 <div className="space-y-4">
-                  {githubStats.languages.map((lang, idx) => (
+                  {githubStats.languages.map((lang) => (
                     <div key={lang.name}>
                       <div className="flex justify-between text-sm mb-1">
                         <span className="text-gray-300">{lang.name}</span>

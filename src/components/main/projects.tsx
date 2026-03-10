@@ -98,7 +98,7 @@ const Projects = () => {
 	// Helper function to extract text description from markdown
 	const extractDescriptionFromMarkdown = (markdown: string): string | null => {
 		const lines = markdown.split('\n');
-		for (let line of lines) {
+		for (const line of lines) {
 			let text = line.trim();
 
 			// Skip headings, blockquotes, code blocks, or pure image/badge lines
@@ -127,9 +127,24 @@ const Projects = () => {
 				const res = await fetch('https://api.github.com/users/Aditya7594/repos?sort=updated&per_page=10');
 				if (!res.ok) return;
 				const repos = await res.json();
-				const activeRepos = repos.filter((r: any) => !r.fork);
 
-				const dynamicProjectsPromises = activeRepos.map(async (repo: any) => {
+				interface GithubRepo {
+					name: string;
+					fork: boolean;
+					description: string | null;
+					default_branch: string;
+					topics: string[];
+					language: string | null;
+					html_url: string;
+					has_pages: boolean;
+					stargazers_count: number;
+					forks_count: number;
+					watchers_count: number;
+				}
+
+				const activeRepos = repos.filter((r: GithubRepo) => !r.fork);
+
+				const dynamicProjectsPromises = activeRepos.map(async (repo: GithubRepo) => {
 					// Match with existing fallback data for better icons/features if available
 					const match = fallbackProjects.find(p => p.link.includes(repo.name) || p.title.toLowerCase() === repo.name.toLowerCase().replace(/-/g, ' '));
 
@@ -162,7 +177,7 @@ const Projects = () => {
 									readmeDescription = extractDescriptionFromMarkdown(markdown);
 								}
 							}
-						} catch (e) {
+						} catch {
 							console.log('No readme found for', repo.name);
 						}
 					}
@@ -207,7 +222,7 @@ const Projects = () => {
 			setCurrentProject((prev) => (prev + 1) % projectsList.length);
 		}, 5000);
 		return () => clearInterval(interval);
-	}, [autoSlide, modalOpen]);
+	}, [autoSlide, modalOpen, projectsList.length]);
 
 	const handleProjectChange = (index: number) => {
 		setCurrentProject(index);
