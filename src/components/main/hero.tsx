@@ -277,7 +277,7 @@ const Hero = () => {
                       <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
                       <span className="text-green-400 text-sm">Available for work</span>
                     </div>
-                    <div className="mt-4 text-xs text-gray-500">👆 Click to flip</div>
+                    <div className="mt-4 text-xs text-gray-500">Click to flip</div>
                   </div>
                 </div>
 
@@ -318,7 +318,7 @@ const Hero = () => {
                         </a>
                       </div>
                     </div>
-                    <div className="mt-6 text-xs text-gray-500">👆 Click to flip back</div>
+                    <div className="mt-6 text-xs text-gray-500">Click to flip back</div>
                   </div>
                 </div>
               </div>
@@ -333,6 +333,9 @@ const Hero = () => {
           width: 300px;
           height: 380px;
           perspective: 1000px;
+          -webkit-perspective: 1000px;
+          touch-action: manipulation;
+          -webkit-tap-highlight-color: transparent;
         }
         @media (min-width: 640px) {
           .hero-card-scene {
@@ -345,7 +348,9 @@ const Hero = () => {
           width: 100%;
           height: 100%;
           transform-style: preserve-3d;
+          -webkit-transform-style: preserve-3d;
           transition: transform 0.7s cubic-bezier(0.4, 0.2, 0.2, 1);
+          will-change: transform;
         }
         .hero-card-inner.hero-card-flipped {
           transform: rotateY(180deg);
@@ -355,6 +360,8 @@ const Hero = () => {
           inset: 0;
           backface-visibility: hidden;
           -webkit-backface-visibility: hidden;
+          transform: translateZ(0);
+          -webkit-transform: translateZ(0);
           background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
           border-radius: 1.5rem;
           border: 1px solid rgba(255,255,255,0.1);
@@ -368,7 +375,8 @@ const Hero = () => {
           overflow: hidden;
         }
         .hero-card-back {
-          transform: rotateY(180deg);
+          transform: rotateY(180deg) translateZ(1px);
+          -webkit-transform: rotateY(180deg) translateZ(1px);
         }
       `}</style>
     </section>
@@ -376,3 +384,4 @@ const Hero = () => {
 };
 
 export default Hero;
+
